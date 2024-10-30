@@ -1,4 +1,4 @@
-module dns_viewer
+module github.com/0x0001/dns_viewer
 
 go 1.23.2
 
