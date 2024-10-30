@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNS Records</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        tr:hover {
+            background-color: #ddd;
+        }
+
+        tr:nth-child(odd) {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>DNS Records</h1>
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>type</th>
+            <th>remote</th>
+            <th>timestamp</th>
+        </tr>
+        {{range .records}}
+        <tr>
+            <td>{{.Sequence}}</td>
+            <td>{{.Name}}</td>
+            <td>{{Atype .Type}}</td>
+            <td>{{.RemoteIP}}</td>
+            <td>{{FormatTimestamp .Timestamp}}</td>
+        </tr>
+        {{end}}
+    </table>
+    <div>
+        <a href="/?limit={{.limit}}">Home</a>
+        <a href="?last={{.prev}}&limit={{.limit}}">Previous</a>
+        <a href="?last={{.last}}&limit={{.limit}}">Next</a>
+    </div>
+</body>
+
+</html>
