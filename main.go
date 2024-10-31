@@ -1,6 +1,7 @@
 package main
 
 import (
+	"embed"
 	"encoding/binary"
 	"encoding/json"
 	"flag"
@@ -11,6 +12,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -111,6 +113,9 @@ func main() {
 //go:embed index.html
 var indexHTML []byte
 
+//go:embed static
+var staticFS embed.FS
+
 func handleShowLogs(db *bbolt.DB) func(http.ResponseWriter, *http.Request) {
 	tpl := template.Must(template.New("index.html").Funcs(template.FuncMap{
 		"Atype": func(atype uint16) string {
@@ -120,8 +125,16 @@ func handleShowLogs(db *bbolt.DB) func(http.ResponseWriter, *http.Request) {
 			return time.Unix(ts, 0).Format(time.RFC3339)
 		},
 	}).Parse(string(indexHTML)))
+	fileServer := http.FileServer(http.FS(staticFS))
 
 	return func(w http.ResponseWriter, r *http.Request) {
+
+		if strings.HasPrefix(r.URL.Path, "/static/") {
+			w.Header().Add("Cache-Control", "public, max-age=31536000")
+			fileServer.ServeHTTP(w, r)
+			return
+		}
+
 		w.Header().Set("Content-Type", "text/html")
 
 		type record struct {
@@ -133,9 +146,12 @@ func handleShowLogs(db *bbolt.DB) func(http.ResponseWriter, *http.Request) {
 		lastID := r.URL.Query().Get("last")
 		limit := r.URL.Query().Get("limit")
 		limitInt, err := strconv.Atoi(limit)
-		LIMIT_MAX := 50
+
+		const LIMIT_MAX = 100
+		const DEFAULT_LIMIT = 20
+
 		if err != nil {
-			limitInt = LIMIT_MAX
+			limitInt = DEFAULT_LIMIT
 		}
 		limitInt = max(1, limitInt)
 		limitInt = min(LIMIT_MAX, limitInt)
